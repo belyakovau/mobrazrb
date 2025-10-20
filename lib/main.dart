@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lab 1 - Basic UI',
+      title: 'Lab 1 - Basic UI!!',
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
       home: const MyHomePage(),
     );
