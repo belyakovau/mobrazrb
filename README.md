@@ -1,16 +1,35 @@
-# lab1_basic_ui
+# Лабораторная работа №1: Базовый UI на Flutter
 
-A new Flutter project.
+## Описание проекта
 
-## Getting Started
+Проект создан в рамках лабораторной работы по изучению основ Flutter.
+Реализован базовый пользовательский интерфейс с использованием основных виджетов.
 
-This project is a starting point for a Flutter application.
+## Цель работы
 
-A few resources to get you started if this is your first Flutter project:
+- Освоить начальную настройку среды разработки Flutter
+- Изучить базовые виджеты (Container, Row, Column, Text)
+- Создать простой UI с интерактивными элементами
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Функциональность
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- ✅ Базовый макет с Container, Row, Column
+- ✅ Интерактивная кнопка FloatingActionButton
+- ✅ CircleAvatar с загрузкой изображения из сети
+- ✅ Состояние счетчика
+
+## Как запустить проект
+
+```bash
+# Клонировать репозиторий
+git clone https://github.com/ваш-логин/lab1_basic_ui.git
+
+# Перейти в папку проекта
+cd lab1_basic_ui
+
+# Установить зависимости
+flutter pub get
+
+# Запустить приложение
+flutter run
+```
