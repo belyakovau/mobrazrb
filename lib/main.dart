@@ -1,508 +1,246 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'config/supabase_config.dart';
+import 'screens/auth_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/clients_screen.dart';
+import 'screens/subscriptions_screen.dart';
+import 'screens/schedule_screen.dart';
+import 'screens/employees_screen.dart';
+import 'screens/reports_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Инициализация Supabase
+  try {
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      anonKey: SupabaseConfig.anonKey,
+    );
+    debugPrint('Supabase инициализирован успешно');
+  } catch (e) {
+    debugPrint('Ошибка инициализации Supabase: $e');
+    // Приложение все равно запустится, но авторизация не будет работать
+  }
+
+  runApp(const FitnessClubApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class FitnessClubApp extends StatelessWidget {
+  const FitnessClubApp({super.key});
+
+  Widget _checkAuthState() {
+    try {
+      // Проверяем состояние авторизации через Supabase
+      final client = Supabase.instance.client;
+      return StreamBuilder<AuthState>(
+        stream: client.auth.onAuthStateChange,
+        builder: (context, snapshot) {
+          final session = snapshot.hasData
+              ? snapshot.data!.session
+              : client.auth.currentSession;
+
+          debugPrint(
+            'Текущая сессия: ${session != null ? "авторизован" : "не авторизован"}',
+          );
+
+          // Если пользователь не авторизован, показываем экран входа
+          if (session == null) {
+            return const AuthScreen();
+          }
+
+          // Если авторизован, показываем главный экран
+          return const MainNavigationWrapper();
+        },
+      );
+    } catch (e) {
+      // Если произошла ошибка при проверке авторизации
+      debugPrint('Ошибка проверки авторизации: $e');
+      // Показываем экран входа по умолчанию
+      return const AuthScreen();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lab 1 - Basic UI with Navigation!!',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      home: const MyHomePage(),
-      // Регистрация именованных маршрутов
+      title: 'Easy Motion - Фитнес Студия',
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.green,
+          brightness: Brightness.light,
+          primary: Colors.green.shade700,
+          secondary: Colors.green.shade400,
+          surface: Colors.grey.shade50,
+        ),
+        // Светло-зеленый фон страниц
+        scaffoldBackgroundColor: Colors.lightGreen.shade100, // 0xFFDCEDC8
+        // Принцип 14: Избегать чисто чёрного текста - используем тёмно-серый
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(
+            color: Color(0xFF1A1A1A), // Тёмно-серый вместо чёрного
+            height: 1.6, // Принцип 16: минимум 1.5 высоты строки
+          ),
+          bodyMedium: TextStyle(color: Color(0xFF1A1A1A), height: 1.6),
+          bodySmall: TextStyle(
+            color: Color(
+              0xFF4A4A4A,
+            ), // Более светлый для второстепенного текста
+            height: 1.6,
+          ),
+          titleLarge: TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.bold,
+            height: 1.5,
+          ),
+          titleMedium: TextStyle(
+            color: Color(0xFF1A1A1A),
+            fontWeight: FontWeight.bold,
+            height: 1.5,
+          ),
+          labelLarge: TextStyle(color: Color(0xFF1A1A1A), height: 1.5),
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.lightGreen.shade700,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          titleTextStyle: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        cardTheme: CardThemeData(
+          elevation: 2,
+          margin: EdgeInsets
+              .zero, // Убираем внешние отступы, управляем через padding родителя
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green.shade700,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              height: 1.5,
+            ),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide(color: Colors.green.shade700, width: 2),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.red, width: 1),
+          ),
+          labelStyle: TextStyle(
+            color: Colors.grey.shade700,
+            fontSize: 14,
+            height: 1.5,
+          ),
+          hintStyle: TextStyle(
+            color: Colors.grey.shade400,
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+      ),
+      home: _checkAuthState(),
       routes: {
-        '/second': (context) => const SecondScreen(),
-        '/profile': (context) => const ProfileScreen(),
-        '/settings': (context) => const SettingsScreen(),
+        '/home': (context) => const MainNavigationWrapper(),
+        '/clients': (context) => const ClientsScreen(),
+        '/subscriptions': (context) => const SubscriptionsScreen(),
+        '/schedule': (context) => const ScheduleScreen(),
+        '/employees': (context) => const EmployeesScreen(),
+        '/reports': (context) => const ReportsScreen(),
       },
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+// Главный виджет-обертка для управления навигацией
+class MainNavigationWrapper extends StatefulWidget {
+  const MainNavigationWrapper({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainNavigationWrapper> createState() => _MainNavigationWrapperState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _MainNavigationWrapperState extends State<MainNavigationWrapper> {
+  int _currentIndex = 0;
 
-  void _incrementCounter() {
+  final List<Widget> _screens = [
+    const HomeScreen(),
+    const ClientsScreen(),
+    const SubscriptionsScreen(),
+    const ScheduleScreen(),
+    const EmployeesScreen(),
+    const ReportsScreen(),
+  ];
+
+  void _onTabTapped(int index) {
     setState(() {
-      _counter++;
+      _currentIndex = index;
     });
   }
 
-  // Навигация с помощью Navigator.push()
-  void _navigateWithPush(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const SecondScreen()),
-    );
-  }
-
-  // Навигация с помощью Navigator.pushNamed()
-  void _navigateWithPushNamed(BuildContext context) {
-    Navigator.pushNamed(context, '/second');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lab 1: Basic UI - Главная'),
-        backgroundColor: Colors.blue.shade800,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () => Navigator.pushNamed(context, '/profile'),
-            tooltip: 'Профиль',
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Первый контейнер с кнопками навигации
-            Container(
-              width: double.infinity,
-              height: 140,
-              decoration: BoxDecoration(
-                color: Colors.blue.shade100,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.shade300, width: 2),
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Навигация',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => _navigateWithPush(context),
-                        child: const Text('Push()'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => _navigateWithPushNamed(context),
-                        child: const Text('PushNamed()'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Row с тремя текстовыми элементами
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text(
-                    'Элемент 1',
-                    style: TextStyle(fontSize: 16, color: Colors.black87),
-                  ),
-                  Text(
-                    'Элемент 2',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'Элемент 3',
-                    style: TextStyle(fontSize: 16, color: Colors.black87),
-                  ),
-                ],
-              ),
-            ),
-
-            // Второй контейнер
-            Container(
-              width: double.infinity,
-              height: 150,
-              decoration: BoxDecoration(
-                color: Colors.green.shade100,
-                borderRadius: BorderRadius.circular(16),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Colors.green.shade100, Colors.lightGreen.shade200],
-                ),
-              ),
-              child: const Center(
-                child: Text(
-                  'Нижний контейнер',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-              ),
-            ),
-
-            const Text(
-              'CircleAvatar пример:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.purple.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.purple.shade200,
-                      child: const Text(
-                        'A1',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundImage: NetworkImage(
-                        'https://picsum.photos/100/100?random=1',
-                      ),
-                    ),
-                    CircleAvatar(
-                      radius: 35,
-                      backgroundColor: Colors.orange.shade200,
-                      child: const Icon(
-                        Icons.star,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Счетчик
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.amber.shade200),
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    'Счетчик нажатий:',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                  Text(
-                    '$_counter',
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange,
-                    ),
-                  ),
-                  Text(
-                    _counter == 0
-                        ? 'Нажмите FAB кнопку!'
-                        : _counter < 5
-                        ? 'Вы начинающий!'
-                        : _counter < 10
-                        ? 'Вы активны!'
-                        : 'Вы эксперт!',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Увеличить счетчик',
-        backgroundColor: Colors.blue.shade600,
-        foregroundColor: Colors.white,
-        child: const Icon(Icons.add),
-      ),
-      // BottomNavigationBar для дополнительной навигации
+      body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.lightGreen.shade700,
+        selectedItemColor: Colors.green.shade400,
+        unselectedItemColor: Colors.grey.shade400,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Главная'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Настройки',
+            icon: Icon(Icons.dashboard),
+            label: 'Главная',
           ),
-        ],
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.pushNamed(context, '/settings');
-          }
-        },
-      ),
-    );
-  }
-}
-
-// Второй экран - демонстрация Navigator.pop()
-class SecondScreen extends StatelessWidget {
-  const SecondScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Второй экран'),
-        backgroundColor: Colors.green.shade800,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-          tooltip: 'Назад',
-        ),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Это второй экран!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.green.shade100,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.green, width: 3),
-              ),
-              child: const Icon(
-                Icons.check_circle,
-                color: Colors.green,
-                size: 80,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Использован Navigator.push() или Navigator.pushNamed()',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 15,
-                ),
-              ),
-              child: const Text('Вернуться назад (pop)'),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: () {
-                // Навигация на другой именованный маршрут
-                Navigator.pushNamed(context, '/profile');
-              },
-              child: const Text('Перейти в профиль'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Экран профиля - демонстрация сложной навигации
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Профиль пользователя'),
-        backgroundColor: Colors.purple.shade800,
-        foregroundColor: Colors.white,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircleAvatar(
-              radius: 60,
-              backgroundImage: NetworkImage(
-                'https://picsum.photos/200/200?random=2',
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Пользователь',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'email@example.com',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            const SizedBox(height: 30),
-            Container(
-              width: 300,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.purple.shade50,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.purple.shade200),
-              ),
-              child: const Column(
-                children: [
-                  Text(
-                    'Это экран профиля',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Достигнут через именованный маршрут /profile',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.purple,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Назад (pop)'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    // Возврат на главный экран с очисткой стека
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MyHomePage(),
-                      ),
-                      (route) => false,
-                    );
-                  },
-                  child: const Text('На главную'),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Экран настроек
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Настройки'),
-        backgroundColor: Colors.orange.shade800,
-        foregroundColor: Colors.white,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const ListTile(
-            leading: Icon(Icons.notifications),
-            title: Text('Уведомления'),
-            trailing: Icon(Icons.arrow_forward_ios),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Клиенты'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.card_membership),
+            label: 'Абонементы',
           ),
-          const ListTile(
-            leading: Icon(Icons.security),
-            title: Text('Конфиденциальность'),
-            trailing: Icon(Icons.arrow_forward_ios),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today),
+            label: 'Расписание',
           ),
-          const ListTile(
-            leading: Icon(Icons.help),
-            title: Text('Помощь'),
-            trailing: Icon(Icons.arrow_forward_ios),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Сотрудники',
           ),
-          const SizedBox(height: 20),
-          Card(
-            color: Colors.orange.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Информация о навигации:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 10),
-                  Text('• Этот экран открыт через BottomNavigationBar'),
-                  Text('• Использован pushNamed с маршрутом /settings'),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Center(
-            child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Закрыть настройки'),
-            ),
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Отчеты'),
         ],
       ),
     );
